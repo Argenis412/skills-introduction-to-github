@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MusicDown - Descarga tu música favorita</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #1e1e2f, #2a2a3a);
+            min-height: 100vh;
+        }
+        
+        .player-progress {
+            -webkit-appearance: none;
+            height: 6px;
+            border-radius: 10px;
+            background: #4b5563;
+            outline: none;
+        }
+        
+        .player-progress::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            background: #3b82f6;
+            cursor: pointer;
+        }
+        
+        .song-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+        }
+        
+        .blur-bg {
+            backdrop-filter: blur(10px);
+            background-color: rgba(30, 30, 47, 0.7);
+        }
+    </style>
+</head>
+<body class="text-gray-200">
+    <!-- Navbar -->
+    <nav class="blur-bg fixed w-full z-50 py-4 px-6 shadow-lg">
+        <div class="container mx-auto flex justify-between items-center">
+            <div class="flex items-center space-x-2">
+                <i class="fas fa-music text-blue-400 text-2xl"></i>
+                <span class="text-xl font-bold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">MusicDown</span>
+            </div>
+            <div class="hidden md:flex space-x-6">
+                <a href="#" class="hover:text-blue-400 transition">Inicio</a>
+                <a href="#" class="hover:text-blue-400 transition">Tendencias</a>
+                <a href="#" class="hover:text-blue-400 transition">Géneros</a>
+                <a href="#" class="hover:text-blue-400 transition">Contacto</a>
+            </div>
+            <button class="md:hidden text-xl">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="pt-32 pb-20 px-6">
+        <div class="container mx-auto text-center">
+            <h1 class="text-4xl md:text-6xl font-bold mb-6">Descarga <span class="bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">música gratis</span></h1>
+            <p class="text-lg md:text-xl text-gray-400 max-w-2xl mx-auto mb-10">
+                Encuentra y descarga tus canciones favoritas en alta calidad. Más de 10 millones de canciones disponibles.
+            </p>
+            
+            <!-- Search Box -->
+            <div class="max-w-2xl mx-auto relative">
+                <input type="text" id="searchInput" placeholder="Busca artistas, canciones o álbumes..." 
+                       class="w-full py-4 px-6 rounded-full bg-gray-800 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 pr-16">
+                <button id="searchBtn" class="absolute right-2 top-1/2 transform -translate-y-1/2 bg-blue-500 hover:bg-blue-600 text-white p-3 rounded-full transition">
+                    <i class="fas fa-search"></i>
+                </button>
+            </div>
+            
+            <div class="mt-6 flex justify-center space-x-4">
+                <span class="text-gray-500 flex items-center">
+                    <i class="fas fa-check-circle text-green-500 mr-2"></i> Sin registrarse
+                </span>
+                <span class="text-gray-500 flex items-center">
+                    <i class="fas fa-check-circle text-green-500 mr-2"></i> Calidad HD
+                </span>
+                <span class="text-gray-500 flex items-center">
+                    <i class="fas fa-check-circle text-green-500 mr-2"></i> Rápido
+                </span>
+            </div>
+        </div>
+    </section>
+
+    <!-- Results Section -->
+    <section class="py-12 px-6" id="resultsSection" style="display: none;">
+        <div class="container mx-auto">
+            <h2 class="text-2xl font-bold mb-8 flex items-center">
+                <i class="fas fa-music mr-3 text-blue-400"></i> Resultados de búsqueda
+                <span id="loadingSpinner" class="ml-3 hidden">
+                    <i class="fas fa-spinner fa-spin"></i>
+                </span>
+            </h2>
+            
+            <div id="resultsContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Results will be inserted here by JavaScript -->
+            </div>
+            
+            <div id="noResults" class="text-center py-12 hidden">
+                <i class="fas fa-search text-5xl text-gray-600 mb-4"></i>
+                <h3 class="text-2xl font-bold mb-2">No se encontraron resultados</h3>
+                <p class="text-gray-500">Intenta con diferentes palabras clave</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Player Section (Fixed at bottom) -->
+    <div id="playerSection" class="fixed bottom-0 left-0 right-0 bg-gray-900 border-t border-gray-800 py-3 px-6" style="display: none;">
+        <div class="container mx-auto flex flex-col md:flex-row items-center">
+            <!-- Song Info -->
+            <div class="flex items-center w-full md:w-1/4 mb-4 md:mb-0">
+                <img id="playerThumbnail" src="https://via.placeholder.com/50" alt="Song" class="w-12 h-12 rounded-md mr-3">
+                <div>
+                    <div id="playerSongTitle" class="font-medium">Canción</div>
+                    <div id="playerArtist" class="text-sm text-gray-500">Artista</div>
+                </div>
+            </div>
+            
+            <!-- Player Controls -->
+            <div class="w-full md:w-2/4 flex flex-col items-center">
+                <div class="flex items-center space-x-6 mb-2">
+                    <button class="text-gray-400 hover:text-white">
+                        <i class="fas fa-random"></i>
+                    </button>
+                    <button class="text-gray-400 hover:text-white">
+                        <i class="fas fa-step-backward"></i>
+                    </button>
+                    <button id="playPauseBtn" class="bg-blue-500 hover:bg-blue-600 text-white p-3 rounded-full">
+                        <i class="fas fa-play"></i>
+                    </button>
+                    <button class="text-gray-400 hover:text-white">
+                        <i class="fas fa-step-forward"></i>
+                    </button>
+                    <button class="text-gray-400 hover:text-white">
+                        <i class="fas fa-redo"></i>
+                    </button>
+                </div>
+                
+                <div class="w-full flex items-center space-x-3">
+                    <span id="currentTime" class="text-xs text-gray-500">0:00</span>
+                    <input type="range" id="progressBar" class="player-progress flex-grow" value="0">
+                    <span id="duration" class="text-xs text-gray-500">0:00</span>
+                </div>
+            </div>
+            
+            <!-- Download and Volume -->
+            <div class="w-full md:w-1/4 flex justify-end items-center space-x-4 mt-4 md:mt-0">
+                <button id="downloadBtn" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-full text-sm flex items-center">
+                    <i class="fas fa-download mr-2"></i> Descargar
+                </button>
+                <div class="flex items-center">
+                    <i class="fas fa-volume-up mr-2 text-gray-400"></i>
+                    <input type="range" id="volumeControl" class="w-20" value="70">
+                </div>
+            </div>
+        </div>
+        
+        <!-- Hidden audio element -->
+        <audio id="audioPlayer"></audio>
+    </div>
+
+    <!-- Features Section -->
+    <section class="py-16 px-6 bg-gray-900">
+        <div class="container mx-auto">
+            <h2 class="text-3xl font-bold text-center mb-12">¿Por qué elegir MusicDown?</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="bg-gray-800 p-6 rounded-xl hover:bg-gray-700 transition">
+                    <div class="text-blue-400 text-4xl mb-4">
+                        <i class="fas fa-bolt"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-2">Descargas rápidas</h3>
+                    <p class="text-gray-400">Obtén tus canciones en segundos con nuestra tecnología de descarga acelerada.</p>
+                </div>
+                
+                <div class="bg-gray-800 p-6 rounded-xl hover:bg-gray-700 transition">
+                    <div class="text-purple-400 text-4xl mb-4">
+                        <i class="fas fa-headphones"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-2">Alta calidad</h3>
+                    <p class="text-gray-400">Disfruta de audio en calidad HD hasta 320kbps sin pérdida de calidad.</p>
+                </div>
+                
+                <div class="bg-gray-800 p-6 rounded-xl hover:bg-gray-700 transition">
+                    <div class="text-green-400 text-4xl mb-4">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-2">Seguro y legal</h3>
+                    <p class="text-gray-400">Nuestro servicio cumple con todas las regulaciones de derechos de autor.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="py-8 px-6 bg-gray-900 border-t border-gray-800">
+        <div class="container mx-auto">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <div class="mb-6 md:mb-0">
+                    <div class="flex items-center space-x-2">
+                        <i class="fas fa-music text-blue-400 text-2xl"></i>
+                        <span class="text-xl font-bold">MusicDown</span>
+                    </div>
+                    <p class="text-gray-500 mt-2">La mejor manera de disfrutar tu música.</p>
+                </div>
+                
+                <div class="flex space-x-6">
+                    <a href="#" class="text-gray-400 hover:text-blue-400">
+                        <i class="fab fa-facebook-f"></i>
+                    </a>
+                    <a href="#" class="text-gray-400 hover:text-blue-400">
+                        <i class="fab fa-twitter"></i>
+                    </a>
+                    <a href="#" class="text-gray-400 hover:text-blue-400">
+                        <i class="fab fa-instagram"></i>
+                    </a>
+                    <a href="#" class="text-gray-400 hover:text-blue-400">
+                        <i class="fab fa-youtube"></i>
+                    </a>
+                </div>
+            </div>
+            
+            <div class="border-t border-gray-800 mt-8 pt-8 flex flex-col md:flex-row justify-between">
+                <div class="text-gray-500 text-sm mb-4 md:mb-0">
+                    &copy; 2023 MusicDown. Todos los derechos reservados.
+                </div>
+                <div class="flex space-x-6">
+                    <a href="#" class="text-gray-500 hover:text-white text-sm">Términos</a>
+                    <a href="#" class="text-gray-500 hover:text-white text-sm">Privacidad</a>
+                    <a href="#" class="text-gray-500 hover:text-white text-sm">Cookies</a>
+                    <a href="#" class="text-gray-500 hover:text-white text-sm">FAQ</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Sample music data (in a real app, this would come from an API)
+        const musicDatabase = [
+            { id: 1, title: "Blinding Lights", artist: "The Weeknd", album: "After Hours", duration: "3:20", cover: "https://i.scdn.co/image/ab67616d00001e02e1a4f6e7058eafa73d78c9a2", audio: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" },
+            { id: 2, title: "Save Your Tears", artist: "The Weeknd", album: "After Hours", duration: "3:35", cover: "https://i.scdn.co/image/ab67616d00001e02e1a4f6e7058eafa73d78c9a2", audio: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3" },
+            { id: 3, title: "Stay", artist: "The Kid LAROI, Justin Bieber", album: "F*CK LOVE 3", duration: "2:21", cover: "https://i.scdn.co/image/ab67616d00001e02a935e5c7c077a8b6f9818e0e", audio: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3" },
+            { id: 4, title: "good 4 u", artist: "Olivia Rodrigo", album: "SOUR", duration: "2:58", cover: "https://i.scdn.co/image/ab67616d00001e02e958b637b62ff3a4a8f2d392", audio: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3" },
+            { id: 5, title: "Levitating", artist: "Dua Lipa", album: "Future Nostalgia", duration: "3:23", cover: "https://i.scdn.co/image/ab67616d00001e02e1a5e8dd4d3b7a6f6c63f5b0", audio: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3" },
+            { id: 6, title: "Montero", artist: "Lil Nas X", album: "MONTERO", duration: "2:17", cover: "https://i.scdn.co/image/ab67616d00001e02e8b7f6c3d2b7a6f6c63f5b0", audio: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-6.mp3" }
+        ];
+
+        // DOM Elements
+        const searchInput = document.getElementById('searchInput');
+        const searchBtn = document.getElementById('searchBtn');
+        const resultsSection = document.getElementById('resultsSection');
+        const resultsContainer = document.getElementById('resultsContainer');
+        const noResults = document.getElementById('noResults');
+        const loadingSpinner = document.getElementById('loadingSpinner');
+        
+        // Player elements
+        const playerSection = document.getElementById('playerSection');
+        const audioPlayer = document.getElementById('audioPlayer');
+        const playPauseBtn = document.getElementById('playPauseBtn');
+        const progressBar = document.getElementById('progressBar');
+        const currentTime = document.getElementById('currentTime');
+        const duration = document.getElementById('duration');
+        const volumeControl = document.getElementById('volumeControl');
+        const downloadBtn = document.getElementById('downloadBtn');
+        const playerThumbnail = document.getElementById('playerThumbnail');
+        const playerSongTitle = document.getElementById('playerSongTitle');
+        const playerArtist = document.getElementById('playerArtist');
+        
+        // Current playing song
+        let currentSong = null;
+        let isPlaying = false;
+
+        // Search function
+        function searchMusic(query) {
+            loadingSpinner.classList.remove('hidden');
+            resultsContainer.innerHTML = '';
+            noResults.classList.add('hidden');
+            
+            // Simulate API delay
+            setTimeout(() => {
+                const results = musicDatabase.filter(song => 
+                    song.title.toLowerCase().includes(query.toLowerCase()) || 
+                    song.artist.toLowerCase().includes(query.toLowerCase()) ||
+                    song.album.toLowerCase().includes(query.toLowerCase())
+                );
+                
+                loadingSpinner.classList.add('hidden');
+                
+                if (results.length === 0) {
+                    noResults.classList.remove('hidden');
+                } else {
+                    displayResults(results);
+                }
+                
+                resultsSection.style.display = 'block';
+            }, 800);
+        }
+        
+        // Display results
+        function displayResults(songs) {
+            songs.forEach(song => {
+                const songCard = document.createElement('div');
+                songCard.className = 'song-card bg-gray-800 rounded-xl p-4 transition duration-300 hover:bg-gray-700 cursor-pointer';
+                songCard.innerHTML = `
+                    <div class="flex items-center">
+                        <img src="${song.cover}" alt="${song.title}" class="w-16 h-16 rounded-md mr-4">
+                        <div class="flex-grow">
+                            <h3 class="font-medium">${song.title}</h3>
+                            <p class="text-sm text-gray-400">${song.artist}</p>
+                            <div class="flex items-center mt-1">
+                                <span class="text-xs text-gray-500 mr-3">${song.duration}</span>
+                                <span class="text-xs bg-gray-700 px-2 py-1 rounded">${song.album}</span>
+                            </div>
+                        </div>
+                        <button class="play-btn text-blue-400 hover:text-blue-300 p-2" data-id="${song.id}">
+                            <i class="fas fa-play"></i>
+                        </button>
+                        <button class="download-btn text-green-400 hover:text-green-300 p-2 ml-2" data-id="${song.id}">
+                            <i class="fas fa-download"></i>
+                        </button>
+                    </div>
+                `;
+                resultsContainer.appendChild(songCard);
+            });
+            
+            // Add event listeners to play buttons
+            document.querySelectorAll('.play-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const songId = parseInt(e.target.closest('button').getAttribute('data-id'));
+                    const song = musicDatabase.find(s => s.id === songId);
+                    playSong(song);
+                });
+            });
+            
+            // Add event listeners to download buttons
+            document.querySelectorAll('.download-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const songId = parseInt(e.target.closest('button').getAttribute('data-id'));
+                    const song = musicDatabase.find(s => s.id === songId);
+                    downloadSong(song);
+                });
+            });
+        }
+        
+        // Play song function
+        function playSong(song) {
+            currentSong = song;
+            audioPlayer.src = song.audio;
+            audioPlayer.play();
+            
+            // Update player UI
+            playerThumbnail.src = song.cover;
+            playerSongTitle.textContent = song.title;
+            playerArtist.textContent = song.artist;
+            
+            // Update play/pause button
+            playPauseBtn.innerHTML = '<i class="fas fa-pause"></i>';
+            isPlaying = true;
+            
+            // Show player
+            playerSection.style.display = 'block';
+            
+            // Scroll to player if mobile
+            if (window.innerWidth < 768) {
+                playerSection.scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+        
+        // Download song function
+        function downloadSong(song) {
+            // In a real app, this would initiate a download
+            alert(`Iniciando descarga de: ${song.title} - ${song.artist}`);
+            
+            // Simulate download (in a real app, you would use a download link)
+            const link = document.createElement('a');
+            link.href = song.audio;
+            link.download = `${song.title} - ${song.artist}.mp3`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+        
+        // Format time (seconds to MM:SS)
+        function formatTime(seconds) {
+            const mins = Math.floor(seconds / 60);
+            const secs = Math.floor(seconds % 60);
+            return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+        }
+        
+        // Event listeners
+        searchBtn.addEventListener('click', () => {
+            if (searchInput.value.trim() !== '') {
+                searchMusic(searchInput.value.trim());
+            }
+        });
+        
+        searchInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && searchInput.value.trim() !== '') {
+                searchMusic(searchInput.value.trim());
+            }
+        });
+        
+        playPauseBtn.addEventListener('click', () => {
+            if (isPlaying) {
+                audioPlayer.pause();
+                playPauseBtn.innerHTML = '<i class="fas fa-play"></i>';
+            } else {
+                audioPlayer.play();
+                playPauseBtn.innerHTML = '<i class="fas fa-pause"></i>';
+            }
+            isPlaying = !isPlaying;
+        });
+        
+        downloadBtn.addEventListener('click', () => {
+            if (currentSong) {
+                downloadSong(currentSong);
+            }
+        });
+        
+        // Update progress bar as song plays
+        audioPlayer.addEventListener('timeupdate', () => {
+            const current = audioPlayer.currentTime;
+            const total = audioPlayer.duration;
+            
+            progressBar.value = (current / total) * 100;
+            currentTime.textContent = formatTime(current);
+            
+            if (!isNaN(total)) {
+                duration.textContent = formatTime(total);
+            }
+        });
+        
+        // Allow seeking
+        progressBar.addEventListener('input', () => {
+            const seekTime = (progressBar.value / 100) * audioPlayer.duration;
+            audioPlayer.currentTime = seekTime;
+        });
+        
+        // Volume control
+        volumeControl.addEventListener('input', () => {
+            audioPlayer.volume = volumeControl.value / 100;
+        });
+        
+        // Song ended
+        audioPlayer.addEventListener('ended', () => {
+            playPauseBtn.innerHTML = '<i class="fas fa-play"></i>';
+            isPlaying = false;
+        });
+        
+        // Initialize volume
+        audioPlayer.volume = volumeControl.value / 100;
+    </script>
+</body>
+</html>
